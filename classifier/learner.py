@@ -37,9 +37,8 @@ import network_structure as nn
 # load image data from file name
 def myConverter(batch, device, padding=None):
 
-    #size = 100
+    # size = 100
     size = 80
-    #size = 32
 
     newBatch = []
     del newBatch
@@ -70,15 +69,20 @@ def myConverter(batch, device, padding=None):
 if __name__ == '__main__':
 
     # Load CNN model
+    model = nn.MCNN1() # 80*80
+    # model = nn.MCNN2() # 100*100
     # model = nn.CNN_thibault2()
-    model = nn.CNN_thibault_ultimate()
 
     # Setup optimizer
     optimizer = chainer.optimizers.Adam()
     optimizer.setup(model)
 
-    train_N = 500000
-    validation_N = 20000
+    # train_N = 140000
+    # validation_N = 10000
+
+    train_N = 100000
+    validation_N = 10000
+
 
     # parse args
     parser = argparse.ArgumentParser(description='CIFAR10 CLASSIFER')

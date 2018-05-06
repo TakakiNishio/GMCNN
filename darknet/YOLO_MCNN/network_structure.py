@@ -92,6 +92,7 @@ class MCNN2(chainer.Chain):
         reporter.report({'accuracy': self.accuracy}, self)
         return self.loss
 
+
 class MCNN3(chainer.Chain):
 
     def __init__(self, train= True):
@@ -129,6 +130,46 @@ class MCNN3(chainer.Chain):
         self.accuracy = accuracy.accuracy(y, t)
         reporter.report({'accuracy': self.accuracy}, self)
         return self.loss
+
+
+class MCNN4(chainer.Chain):
+
+    def __init__(self, train= True):
+        super(MCNN4, self).__init__(
+            conv1 = L.Convolution2D(3, 3, 5),
+            conv2 = L.Convolution2D(3, 3, 5),
+            conv3 = L.Convolution2D(3, 3, 5),
+            l1 = L.Linear(243, 100),
+            lo = L.Linear(100, 2),
+            bn1 = L.BatchNormalization(6),
+        )
+        self.train = train
+
+    def clear(self):
+        self.loss = None
+        self.accuracy = None
+        self.h = None
+
+    def forward(self, x):
+        h = F.relu(self.conv1(x))
+        h = F.max_pooling_2d(F.relu(h), 3, stride=2)
+        h = F.relu(self.conv2(h))
+        h = F.max_pooling_2d(F.relu(h), 3, stride=2)
+        h = F.relu(self.conv3(h))
+        h = F.max_pooling_2d(F.relu(h), 3, stride=2)
+        h = F.relu(self.l1(h))
+        y = self.lo(h)
+        return y
+
+    def __call__(self, x, t):
+        self.clear()
+        y = self.forward(x)
+        self.loss = F.softmax_cross_entropy(y, t)
+        reporter.report({'loss': self.loss}, self)
+        self.accuracy = accuracy.accuracy(y, t)
+        reporter.report({'accuracy': self.accuracy}, self)
+        return self.loss
+
 
 #model5
 class CNN_thibault2(chainer.Chain):

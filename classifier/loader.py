@@ -48,9 +48,9 @@ def validation(size,model,x,y):
 
         if label == 1:
             color = (0,255,0)
-            result_info = "TARGET({0:.2f}%)".format(prob*100)
+            result_info = "POSITIVE({0:.2f}%)".format(prob*100)
         else:
-            result_info = "OTHERS({0:.2f})".format((1.0-prob)*100)
+            result_info = "NEGATIVE({0:.2f})".format((1.0-prob)*100)
 
         print result_info
 
@@ -59,7 +59,7 @@ def validation(size,model,x,y):
               + " time:{0:.5f}".format(elapsed_time) + " [sec]"
 
         #visualize result
-        #end_flag = v.result_visualizer(input_img, label)
+        # end_flag = v.result_visualizer(input_img, label)
 
         if label == y[i]:
             success_counter += 1.0
@@ -87,15 +87,38 @@ if __name__ == '__main__':
 
     test_N = 1000
 
-    model_path = 'thibault_model5/'
-    model_name = 'cnn_gpu.model'
-    size = 50
-    model = nn.CNN_thibault2()
-
-    # model_path = 'thibault_model_ultimate/'
+    # carrot model 1
+    # model_path = 'carrot_model1/'
     # model_name = 'cnn_gpu.model'
     # size = 80
-    # model = nn.CNN_thibault_ultimate()
+    # model = nn.MCNN1()
+
+    # carrot model 2
+    # model_path = 'carrot_model2/'
+    # model_name = 'cnn_gpu.model'
+    # size = 80
+    # model = nn.MCNN1()
+
+    # carrot model 4
+    # model_path = 'carrot_model4/'
+    # model_name = 'cnn_gpu.model'
+    # size = 80
+    # model = nn.MCNN1()
+
+    # carrot model 5
+    # model_path = 'carrot_model5/'
+    # model_name = 'cnn_gpu.model'
+    # size = 100
+    # model = nn.MCNN2()
+
+    # carrot model 6
+    model_path = 'carrot_model6/'
+    model_name = 'cnn_gpu.model'
+    size = 150
+    model = nn.MCNN3()
+
+
+
 
     serializers.load_npz(model_path+model_name, model)
     optimizer = chainer.optimizers.Adam()

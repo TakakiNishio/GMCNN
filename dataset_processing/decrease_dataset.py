@@ -54,7 +54,7 @@ def save_label_list(label_list,file_address_name):
 
 
 # increase dataset
-def increase(dataset_path, save_path):
+def increase(dataset_path, save_path, n):
 
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
@@ -66,58 +66,12 @@ def increase(dataset_path, save_path):
     files = sorted(os.listdir(dataset_path))
     data_N = len(files)
 
-    for i in range(data_N):
+    for i in range(0,data_N,n):
 
         # original image
         origin_img = cv2.imread(dataset_path+'/'+files[i])
         cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', origin_img)
         im_cnt += 1
-
-        # high contrast
-        high_cont_img = cv2.LUT(origin_img, LUT_HC)
-        cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', high_cont_img)
-        im_cnt += 1
-
-        # low contrast
-        low_cont_img = cv2.LUT(origin_img, LUT_LC)
-        cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', low_cont_img)
-        im_cnt += 1
-
-        # noise
-        noised_img = noise(origin_img)
-        cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', noised_img)
-        im_cnt += 1
-
-        # smoothing
-        average_size = 2
-        blur_img = cv2.blur(origin_img, (average_size,average_size))
-        cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', blur_img)
-        im_cnt += 1
-
-        # flip horizontally
-        flipped_img = cv2.flip(origin_img, 1)
-        cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', flipped_img)
-        im_cnt += 1
-
-        # flip vertically
-        flipped_img = cv2.flip(origin_img, 0)
-        cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', flipped_img)
-        im_cnt += 1
-
-        # # resize
-        # h, w = origin_img.shape[:2]
-        # r1 = random.uniform(0.6,1.0)
-        # r2 = random.uniform(0.6,1.0)
-        # resized_img = cv2.resize(origin_img, (int(w*r1),int(h*r2)))
-        # cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', resized_img)
-        # im_cnt += 1
-
-        # # resize
-        # r3 = random.uniform(0.6,1.0)
-        # r4 = random.uniform(0.6,1.0)
-        # resized_img = cv2.resize(origin_img, (int(w*r3),int(h*r4)))
-        # cv2.imwrite(save_path+'/'+str(im_cnt)+'.jpg', resized_img)
-        # im_cnt += 1
 
         if i % 100 == 0:
             print str(i) + '/' + str(data_N)
@@ -129,6 +83,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='extract object images')
     parser.add_argument('--label', '-l', type=int, default=0, help='specified label')
+    parser.add_argument('--data_n', '-n', type=int, default=10,help='input image')
     parser.add_argument('--input_image_directory', '-id', type=str, default=False,help='input image')
     parser.add_argument('--output_image_directory', '-od', type=str, default=False,help='output image')
     args = parser.parse_args()
@@ -144,5 +99,5 @@ if __name__ == '__main__':
     print 'label: ' + str(label)
     print 'directory: ' + input_path
 
-    increase(input_path, output_path)
+    increase(input_path, output_path, args.data_n)
  

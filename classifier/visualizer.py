@@ -67,7 +67,7 @@ def result_visualizer(input_img, estimated_label):
     if estimated_label == 1:
         print 'TARGET'
         cv2.putText(input_img, 'TARGET', (5, height-20),
-                    fontType, 0.8, (88,217,78), 2, cv2.CV_AA)
+                    fontType, 0.8, (88,217,78), 2)
 
     cv2.imshow('image', input_img)
 

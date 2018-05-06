@@ -8,6 +8,9 @@ import argparse
 import os
 import copy
 
+from mcnn import *
+from network_structure import *
+
 
 def sample(probs):
     s = sum(probs)
@@ -244,29 +247,59 @@ def check_sign(rec):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='extract object images')
-    parser.add_argument('--label', '-l', type=str, default=False,help='specified label')
-    parser.add_argument('--video_path', '-v', type=str, default=False,help='path to video')
-    parser.add_argument('--output_image_directory', '-od', type=str, default=False,help='output image')
-    parser.add_argument('--margin', '-m', type=int, default=0,help='margin value')
+    # setup some arguments
+    parser = argparse.ArgumentParser(description='yolov2_darknet_predict for video')
+    parser.add_argument('--video_file', '-v', type=str, default=False,help='path to video')
+    parser.add_argument('--camera_ID', '-c', type=int, default=0,help='camera ID')
+    parser.add_argument('--label', '-l', type=str, default="carrot",help='specified label')
+    parser.add_argument('--margin', '-m', type=int, default=15,help='margin value')
+    parser.add_argument('--square', '-square', action="store_true")
+    # parser.add_argument('--save_name', '-s', type=str, default=False,help='camera ID')
+    parser.add_argument('--superposition', '-superposition', action="store_true")
+
     args = parser.parse_args()
 
-    output_path = args.output_image_directory
+    # prepare to get image frames
+    if not args.video_file == False:
+        cap = cv2.VideoCapture(args.video_file)
+    else:
+        cap = cv2.VideoCapture(args.camera_ID)
 
-    if not output_path is False and not os.path.isdir(output_path):
-        os.makedirs(output_path)
-
-    cap = cv2.VideoCapture(args.video_path)
     ret, img = cap.read()
 
+    # Load YOLO
     net = load_net("../cfg/yolov3.cfg", "../yolov3.weights", 0)
     meta = load_meta("../cfg/coco.data")
 
-    # net = load_net("../cfg/yolov3.cfg", "../yolov3.weights", 0)
-    # meta = load_meta("../cfg/coco.data")
-
     # net = load_net("../cfg/yolov2.cfg", "../yolov2.weights", 0)
     # meta = load_meta("../cfg/coco.data")
+
+    
+    # Load module type CNN model and weights
+    # model_path = 'carrot_model1/'
+    # model = MCNN1()
+    # image_size = 80
+    # mcnn = MCNN(model_path, model, image_size)
+
+    # model_path = 'carrot_model2/'
+    # model = MCNN1()
+    # image_size = 80
+    # mcnn = MCNN(model_path, model, image_size)
+
+    # model_path = 'carrot_model4/'
+    # model = MCNN1()
+    # image_size = 80
+    # mcnn = MCNN(model_path, model, image_size)
+
+    # model_path = 'carrot_model6/'
+    # model = MCNN3()
+    # image_size = 150
+    # mcnn = MCNN(model_path, model, image_size)
+
+    model_path = 'carrot_model10/'
+    model = MCNN3()
+    image_size = 150
+    mcnn = MCNN(model_path, model, image_size)
 
     color = (0,255,0)
 
@@ -291,19 +324,104 @@ if __name__ == "__main__":
             pt2 = (xmax, ymax)
 
             if i[0].decode() == args.label:
+
                 # print args.label + " is found!"
                 # print (ymin, ymax, xmin, xmax)
                 # print
-                rec_points = check_sign([ymin-m, ymax+m, xmin-m, xmax+m])
-                target_img = copied_img[rec_points[0]:rec_points[1], \
-                                        rec_points[2]:rec_points[3]] # ymin:ymax, xmin:xmax
-            
+
+                if args.square:
+                    if w < h :
+                        d = int((h - w)/2.0)
+                        xmin = xmin - d
+                        xmax = xmax + d
+                    else:
+                        d = int((w - h)/2.0)
+                        ymin = ymin - d
+                        ymax = ymax + d
+                    rec_points = check_sign([ymin-m, ymax+m, xmin-m, xmax+m])
+                    target_img = copied_img[rec_points[0]:rec_points[1], \
+                                    rec_points[2]:rec_points[3]] # ymin:ymax, xmin:xmax
+
+                    target_class, prob = mcnn(target_img)
+                    print prob
+                    
+
+                else:
+                    rec_points = check_sign([ymin-m, ymax+m, xmin-m, xmax+m])
+                    target_img = copied_img[rec_points[0]:rec_points[1], \
+                                        rec_points[2]:rec_points[3]]
+                    # ymin:ymax, xmin:xmax
+
+                    w, h, ch = target_img.shape[:3]
+
+                    if args.superposition:
+                        if w < h :
+                            s = h
+                            x1 = int((h-w)/2.0)
+                            x2 = x1 + w
+                            y1 = 0
+                            y2 = h
+                        else:
+                            s = w
+                            x1 = 0
+                            x2 = w
+                            y1 = int((w-h)/2.0)
+                            y2 = y1 + h
+
+                        background_img = np.tile(np.uint8([0,0,0]), (s,s,1))
+
+                        background_img[x1:x2,y1:y2] = target_img
+
+                        target_img = copy.deepcopy(background_img)
+                        print "sup"
+
+                        # cv2.imshow("aaa", background_img)
+
+                        # target_class, prob = mcnn(target_img)
+                        target_class, prob = mcnn(background_img)
+
+                        print target_class
+
+                        print prob
+                    else:
+                        target_class, prob = mcnn(target_img)
+                        print prob
+                    
+                if target_class == 0:
+                    color = (0,0,255)
+                    result = "(group: A)"
+                else:
+                    color = (255,0,0)
+                    result = "(group: B)"
+
+                # if target_class == 1 and prob > 0.95:
+                #     color = (255,0,0)
+                #     result = "(group: B)"
+                # else:
+                #     color = (0,0,255)
+                #     result = "(group: A)"
+
+                # if target_class == 1 and prob > 0.95:
+                #     color = (255,0,0)
+                #     result = "(label 1)"
+                # elif target_class == 0 and (1.0-prob) > 0.95:
+                #     color = (0,0,255)
+                #     result = "(label 0)"
+                # else:
+                #     color = (0,255,0)
+                #     result = "(else)"
+                    
                 cv2.rectangle(img, pt1, pt2, color, 2)
-                cv2.putText(img, i[0].decode() + " [" + str(round(i[1] * 100, 2)) + "%]",
+                # cv2.putText(img, i[0].decode() + " [" + str(round(i[1] * 100, 2)) + "%]",
+                #             (pt1[0]+2, pt1[1]+25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 3)
+                # cv2.putText(img, i[0].decode() +" "+result+ " [" + str(round(i[1] * 100, 2)) + "%]",
+                #             (pt1[0]+2, pt1[1]+25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 3)
+
+                cv2.putText(img, i[0].decode() +" "+result,
                             (pt1[0]+2, pt1[1]+25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 3)
-                                
-                cv2.imwrite(output_path+"/"+str(im_cnt)+".jpg",target_img)
-                
+
+
+
                 im_cnt += 1
 
         cv2.imshow("result", img)

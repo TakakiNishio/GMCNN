@@ -6,70 +6,82 @@ import numpy as np
 from numpy.random import *
 from matplotlib import pylab as plt
 import random
+import argparse
 
 # OpenCV
 import cv2
 
 
-# load the dataset and display
-def display_dataset(dataset_path):
-
-    rec_file = open(dataset_path+'rectangles.txt','r')
-    label_file = open(dataset_path+'labels.txt','r')
-
-    rec_data = []
-    label_data = []
-
-    for rec_f in rec_file:
-        rec_str = (rec_f.split(','))
-        rec_data.append([int(rec_str[0]),int(rec_str[1]),int(rec_str[2]),int(rec_str[3])])
-
-    for label_f in label_file:
-        label_str = label_f
-        label_data.append(int(label_str))
-
-    index_list = random.sample(xrange(len(rec_data)), 5)
-
-    for index in index_list:
-
-        img = cv2.imread(dataset_path+str(index)+'.jpg')
-
-        if label_data[index] == 1: rec_color = (0,165,255)
-        elif label_data[index] == 2: rec_color = (255,125,86)
-        else: rec_color = (0,0,0)
-
-        cv2.rectangle(img, \
-                      (rec_data[index][0] - rec_data[index][2]/2,  \
-                       rec_data[index][1] - rec_data[index][3]/2), \
-                      (rec_data[index][0] + rec_data[index][2]/2,  \
-                       rec_data[index][1] + rec_data[index][3]/2), \
-                      rec_color, 10)
-
-        cv2.namedWindow('data'+str(index), cv2.WINDOW_NORMAL)
-        cv2.imshow('data'+str(index),img)
-
-
 # main
 if __name__ == '__main__':
 
-    #dataset_path = '../../dataset/images/overlaped/cource_2017/for_training/sample/'
-    #dataset_path = '../../dataset/images/overlaped/cource_2017/for_training/'
+    parser = argparse.ArgumentParser(description='prepare txt data for training')
+    parser.add_argument('--txt_directory', '-d', type=str, default="data",help='negative data path')
+    args = parser.parse_args()
 
-    #dataset_path = '../../dataset/images/overlaped/2017_08_18/for_training/sample/'
-    #dataset_path = '../../dataset/images/overlaped/2017_08_18/for_training/original/'
-    dataset_path = '../../dataset/images/overlaped/2017_08_18/for_training/increased/'
+    dataset_path = args.txt_directory
+    end_flag = False
+    fontType = cv2.FONT_HERSHEY_SIMPLEX
 
-    d = 1
-    # d = 2
-    # d = 3
-    # d = 4
-    # d = 5
-    # d = 6
-    # d = 7
+    image_path_txt = open(dataset_path+'/images.txt','r')
+    label_txt = open(dataset_path+'/labels.txt','r')
 
-    dataset_path = dataset_path + str(d) + '/'
+    image_path_list = []
+    label_list = []
 
-    display_dataset(dataset_path)
+    for image_path in image_path_txt:
+        image_path_list.append(image_path.split('\n')[0])
 
-    cv2.waitKey(0)
+    for label in label_txt:
+        label_list.append(int(label))
+
+    data_N = len(image_path_list)
+
+    print data_N
+    print len(label_list)
+
+    while(True):
+
+        random_index = random.randint(0, data_N-1)
+        print str(image_path_list[random_index])
+
+        img = cv2.imread(image_path_list[random_index])
+        label = label_list[random_index]
+
+        height = img.shape[0]
+        width = img.shape[1]
+
+        if label == 1:
+            msg = "POSITIVE"
+            color = (221,178,68)
+        else:
+            msg = "NEGATIVE"
+            color = (250,53,225)
+
+        print msg
+        cv2.putText(img, msg, (5, height-20), fontType, 0.8, color, 2)
+        cv2.imshow("image", img)
+
+        key = cv2.waitKey(1000) & 0xFF
+
+        if key & 0xFF == 27:
+            break
+
+
+        # while (True):
+
+        #     key = cv2.waitKey(1) & 0xFF
+
+        #     # load next image
+        #     if key & 0xFF == ord("z"):
+        #         break
+
+        #     # finish this program
+        #     if key & 0xFF == 27:
+        #         end_flag = True
+        #         break
+
+        # if end_flag == True:
+        #     break
+
     cv2.destroyAllWindows()
