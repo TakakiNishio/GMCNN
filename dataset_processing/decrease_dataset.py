@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='extract object images')
     parser.add_argument('--label', '-l', type=int, default=0, help='specified label')
-    parser.add_argument('--data_n', '-n', type=int, default=10,help='input image')
+    parser.add_argument('--data_n', '-n', type=int, default=10,help='N')
     parser.add_argument('--input_image_directory', '-id', type=str, default=False,help='input image')
     parser.add_argument('--output_image_directory', '-od', type=str, default=False,help='output image')
     args = parser.parse_args()

@@ -30,9 +30,9 @@ def validation(size,model,x,y):
 
     for i in range(len(x)):
 
-        input_img = cv2.cvtColor(cv2.imread(x[i]),cv2.COLOR_BGR2RGB)
+        input_img = cv2.cvtColor(cv2.imread(x[i]),cv2.COLOR_BGR2GRAY)
         img = cv2.resize(input_img, (size,size), interpolation = cv2.INTER_LINEAR)
-        img = img.reshape((1,3,size,size)).astype(np.float32) / 255.
+        img = img.reshape((1,1,size,size)).astype(np.float32) / 255.
 
         start = time.time()
         validation_output = model.forward(chainer.Variable(img))
@@ -118,17 +118,16 @@ if __name__ == '__main__':
     # model = nn.MCNN3()
 
     # carrot model 11
-    model_path = 'carrot_model11/'
+    # model_path = 'carrot_model11/'
+    # model_name = 'cnn_gpu.model'
+    # size = 150
+    # model = nn.MCNN32()
+
+    # carrot model grayed
+    model_path = 'carrot_model_grayed/'
     model_name = 'cnn_gpu.model'
     size = 150
-    model = nn.MCNN32()
-
-    # carrot model 12
-    model_path = 'carrot_model12/'
-    model_name = 'cnn_gpu.model'
-    size = 150
-    model = nn.MCNN33()
-
+    model = nn.MCNN32_grayed()
 
     serializers.load_npz(model_path+model_name, model)
     optimizer = chainer.optimizers.Adam()

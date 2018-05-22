@@ -251,6 +251,7 @@ if __name__ == "__main__":
     parser.add_argument('--margin', '-m', type=int, default=0,help='margin value')
     parser.add_argument('--square', '-square', action="store_true")
     parser.add_argument('--superposition', '-superposition', action="store_true")
+    parser.add_argument('--entire', '-entire', action="store_true")
     args = parser.parse_args()
 
     output_path = args.output_image_directory
@@ -348,8 +349,10 @@ if __name__ == "__main__":
                 cv2.rectangle(img, pt1, pt2, color, 2)
                 cv2.putText(img, i[0].decode() + " [" + str(round(i[1] * 100, 2)) + "%]",
                             (pt1[0]+2, pt1[1]+25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 3)
-                                
-                cv2.imwrite(output_path+"/"+str(im_cnt)+".jpg",target_img)
+                if args.entire:
+                    cv2.imwrite(output_path+"/"+str(im_cnt)+".jpg",copied_img)
+                else:           
+                    cv2.imwrite(output_path+"/"+str(im_cnt)+".jpg",target_img)
                 
                 im_cnt += 1
 

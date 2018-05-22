@@ -249,80 +249,83 @@ if __name__ == "__main__":
 
     # setup some arguments
     parser = argparse.ArgumentParser(description='yolov2_darknet_predict for video')
-    parser.add_argument('--video_file', '-v', type=str, default=False,help='path to video')
-    parser.add_argument('--camera_ID', '-c', type=int, default=0,help='camera ID')
     parser.add_argument('--label', '-l', type=str, default="carrot",help='specified label')
     parser.add_argument('--margin', '-m', type=int, default=15,help='margin value')
     parser.add_argument('--square', '-square', action="store_true")
-    # parser.add_argument('--save_name', '-s', type=str, default=False,help='camera ID')
+    parser.add_argument('--gray', '-gray', action="store_true")
     parser.add_argument('--superposition', '-superposition', action="store_true")
-
+    parser.add_argument('--txt_directory', '-d', type=str, default="data",help='txt data path')
+    parser.add_argument('--savedir', '-savedir', type=str, default=None,help='specified label')
     args = parser.parse_args()
 
-    # prepare to get image frames
-    if not args.video_file == False:
-        cap = cv2.VideoCapture(args.video_file)
-    else:
-        cap = cv2.VideoCapture(args.camera_ID)
+    dataset_path = args.txt_directory
+    end_flag = False
+    fontType = cv2.FONT_HERSHEY_SIMPLEX
 
-    ret, img = cap.read()
+    image_path_txt = open(dataset_path+'/images.txt','r')
+    label_txt = open(dataset_path+'/labels.txt','r')
+
+    image_path_list = []
+    label_list = []
+
+    for image_path in image_path_txt:
+        image_path_list.append(image_path.split('\n')[0])
+
+    for label in label_txt:
+        label_list.append(label.split('\n')[0])
+
+    data_N = len(image_path_list)
+
+    if args.savedir is not None:
+        if not os.path.isdir(args.savedir):
+            os.makedirs(args.savedir)
 
     # Load YOLO
     net = load_net("../cfg/yolov3.cfg", "../yolov3.weights", 0)
     meta = load_meta("../cfg/coco.data")
 
-    # net = load_net("../cfg/yolov2.cfg", "../yolov2.weights", 0)
-    # meta = load_meta("../cfg/coco.data")
-
-    
     # Load module type CNN model and weights
-    # model_path = 'carrot_model1/'
-    # model = MCNN1()
-    # image_size = 80
-    # mcnn = MCNN(model_path, model, image_size)
-
-    # model_path = 'carrot_model2/'
-    # model = MCNN1()
-    # image_size = 80
-    # mcnn = MCNN(model_path, model, image_size)
-
-    # model_path = 'carrot_model4/'
-    # model = MCNN1()
-    # image_size = 80
-    # mcnn = MCNN(model_path, model, image_size)
-
-    # model_path = 'carrot_model6/'
-    # model = MCNN3()
-    # image_size = 150
-    # mcnn = MCNN(model_path, model, image_size)
-
-    # model_path = 'carrot_model10/'
-    # model = MCNN3()
-    # image_size = 150
-    # mcnn = MCNN(model_path, model, image_size)
-
     model_path = 'carrot_model11/'
     model = MCNN32()
     image_size = 150
-    mcnn = MCNN(model_path, model, image_size)
+ 
+    # carrot model grayed
+    # model_path = 'carrot_model_grayed/'
+    # model = nn.MCNN32_grayed()
+    # image_size = 150
 
+
+    if args.gray:
+        mcnn = MCNN_grayed(model_path, model, image_size)
+    else:
+        mcnn = MCNN(model_path, model, image_size)
 
     color = (0,255,0)
-
+    m = args.margin
     cv2.namedWindow("result", cv2.WINDOW_NORMAL)
 
-    m = args.margin
-    im_cnt = 0
+    cnt_success = 0
 
-    while(1):
-        ret, img = cap.read()
+    # data_N = 10
+
+    for data_index in range(data_N):
+
+        img = cv2.imread('../'+image_path_list[data_index])
+        correct_label = label_list[data_index]
+
         copied_img = copy.deepcopy(img)
+        height = img.shape[0]
+        width= img.shape[0]
 
         if img is None:
             print "No image !!"
             break
 
         r = detect_np(net, meta, img)
+
+        cnt_negative = 0
+        cnt_positive = 0
+
         for i in r:
             x, y, w, h = i[2][0], i[2][1], i[2][2], i[2][3]
             xmin, ymin, xmax, ymax = convertBack(float(x), float(y), float(w), float(h))
@@ -330,10 +333,6 @@ if __name__ == "__main__":
             pt2 = (xmax, ymax)
 
             if i[0].decode() == args.label:
-
-                # print args.label + " is found!"
-                # print (ymin, ymax, xmin, xmax)
-                # print
 
                 if args.square:
                     if w < h :
@@ -347,17 +346,13 @@ if __name__ == "__main__":
                     rec_points = check_sign([ymin-m, ymax+m, xmin-m, xmax+m])
                     target_img = copied_img[rec_points[0]:rec_points[1], \
                                     rec_points[2]:rec_points[3]] # ymin:ymax, xmin:xmax
-
                     target_class, prob = mcnn(target_img)
                     print prob
-                    
 
                 else:
                     rec_points = check_sign([ymin-m, ymax+m, xmin-m, xmax+m])
                     target_img = copied_img[rec_points[0]:rec_points[1], \
                                         rec_points[2]:rec_points[3]]
-                    # ymin:ymax, xmin:xmax
-
                     w, h, ch = target_img.shape[:3]
 
                     if args.superposition:
@@ -379,16 +374,7 @@ if __name__ == "__main__":
                         background_img[x1:x2,y1:y2] = target_img
 
                         target_img = copy.deepcopy(background_img)
-                        print "sup"
-
-                        # cv2.imshow("aaa", background_img)
-
-                        # target_class, prob = mcnn(target_img)
-                        target_class, prob = mcnn(background_img)
-
-                        print target_class
-
-                        print prob
+                        target_class, prob = mcnn(target_img)
                     else:
                         target_class, prob = mcnn(target_img)
                         print prob
@@ -396,43 +382,61 @@ if __name__ == "__main__":
                 if target_class == 0:
                     color = (0,0,255)
                     result = "(group: A)"
+                    cnt_negative += 1
                 else:
                     color = (255,0,0)
                     result = "(group: B)"
+                    cnt_positive += 1
 
-                # if target_class == 1 and prob > 0.95:
-                #     color = (255,0,0)
-                #     result = "(group: B)"
-                # else:
-                #     color = (0,0,255)
-                #     result = "(group: A)"
-
-                # if target_class == 1 and prob > 0.95:
-                #     color = (255,0,0)
-                #     result = "(label 1)"
-                # elif target_class == 0 and (1.0-prob) > 0.95:
-                #     color = (0,0,255)
-                #     result = "(label 0)"
-                # else:
-                #     color = (0,255,0)
-                #     result = "(else)"
-                    
                 cv2.rectangle(img, pt1, pt2, color, 2)
-                # cv2.putText(img, i[0].decode() + " [" + str(round(i[1] * 100, 2)) + "%]",
-                #             (pt1[0]+2, pt1[1]+25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 3)
-                # cv2.putText(img, i[0].decode() +" "+result+ " [" + str(round(i[1] * 100, 2)) + "%]",
-                #             (pt1[0]+2, pt1[1]+25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 3)
-
                 cv2.putText(img, i[0].decode() +" "+result,
                             (pt1[0]+2, pt1[1]+25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 3)
 
+        output_label = str(cnt_negative) + str(cnt_positive)
 
+        if output_label == correct_label:
+            cnt_success += 1.0
+            msg_result = "success"
+            color_msg = (200,0,0)
+        else:
+            msg_result = "failure"
+            color_msg = (0,0,200)
 
-                im_cnt += 1
+        msg_num = "image: " + str(data_index+1) + "/" + str(data_N)
+        msg_correct_label = "correct label: " + correct_label
+        msg_output_label = "output label: " + output_label
+            
+        print
+        print msg_num
+        print msg_correct_label
+        print msg_output_label
+        print msg_result
+
+        cv2.putText(img, msg_num, (5, height-20), fontType, 0.7, (255,0,0), 2)
+        cv2.putText(img, msg_correct_label, (5,40), fontType, 0.9, (0,255,0), 2)
+        cv2.putText(img, msg_output_label, (5,75), fontType, 0.9, (255,0,0), 2)
+        cv2.putText(img, msg_result, (5,105), fontType, 0.9, color_msg, 2)
 
         cv2.imshow("result", img)
-        k = cv2.waitKey(1) & 0xFF
 
+        if args.savedir is not None:
+            cv2.imwrite(args.savedir+'/'+str(data_index)+'_'+msg_result+'.jpg', img)
+
+        k = cv2.waitKey(100) & 0xFF
         if k == 27:
-            cv2.destroyAllWindows()
             exit()
+
+    success_rate = (cnt_success/data_N)*100
+    print
+    print "test accuracy: " + str(round(success_rate,2))
+
+    acc_img = np.tile(np.uint8([245,245,245]), (height, width,1))
+
+    cv2.putText(acc_img, "accuracy: "+str(round(success_rate,2))+" %",
+                (25,150), fontType, 0.8, (255,0,0), 2)
+
+    cv2.imshow("result", acc_img)
+    key = cv2.waitKey(1500) & 0xFF
+
+    cv2.destroyAllWindows()
+            

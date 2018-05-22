@@ -49,14 +49,12 @@ def myConverter(batch, device, padding=None):
 
         #print batch[i]
 
-        x = cv2.cvtColor(cv2.imread(batch[i][0]),cv2.COLOR_BGR2RGB)
+        x = cv2.cvtColor(cv2.imread(batch[i][0]),cv2.COLOR_BGR2GRAY)
         y = batch[i][1]
 
         x = cv2.resize(x, (size,size), interpolation = cv2.INTER_LINEAR)
 
-        x = x.reshape((3,size,size)).astype(np.float32) / 255.
-        #x = np.rollaxis(x.reshape((3,size,size)),0,3)
-        #x = x.reshape((3,size,size)).astype(np.float32) / 255.
+        x = x.reshape((1,size,size)).astype(np.float32) / 255.
 
         newBatch.append((x, y))
 
@@ -70,27 +68,16 @@ def myConverter(batch, device, padding=None):
 if __name__ == '__main__':
 
     # Load CNN model
-    # model = nn.MCNN1() # 80*80
-    # model = nn.MCNN2() # 100*100
-    # model = nn.MCNN3() # 150*150
     # model = nn.MCNN32() # 150*150
-    model = nn.MCNN33() # 150*150
-    # model = nn.MCNN4() # 100*100
+    model = nn.MCNN32_grayed() # 150*150
 
 
     # Setup optimizer
     optimizer = chainer.optimizers.Adam()
     optimizer.setup(model)
 
-    # train_N = 140000
-    # validation_N = 10000
-
     train_N = 15000
     validation_N = 1500
-
-    # train_N = 8000
-    # validation_N = 800
-
 
     # parse args
     parser = argparse.ArgumentParser(description='CIFAR10 CLASSIFER')
@@ -134,7 +121,6 @@ if __name__ == '__main__':
     trainer.extend(extensions.Evaluator(validation_iter, model, device=args.gpu, converter=myConverter))
     trainer.extend(extensions.LogReport())
     trainer.extend(extensions.PrintReport(['epoch', 'main/accuracy', 'validation/main/accuracy']))
-    #trainer.extend(extensions.PrintReport(['epoch', 'main/loss', 'validation/main/loss','main/accuracy', 'validation/main/accuracy']))
     trainer.extend(extensions.ProgressBar())
     trainer.run()
 
@@ -146,5 +132,4 @@ if __name__ == '__main__':
         model.to_cpu()
 
     serializers.save_npz('cnn_gpu.model', model)
-    #serializers.save_npz('cnn_gpu.state', optimizer)
     print "model saved"

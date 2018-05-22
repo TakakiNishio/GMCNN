@@ -17,6 +17,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='prepare txt data for training')
     parser.add_argument('--txt_directory', '-d', type=str, default="data",help='negative data path')
+    parser.add_argument('--testdata', '-testdata', action="store_true")
     args = parser.parse_args()
 
     dataset_path = args.txt_directory
@@ -33,7 +34,10 @@ if __name__ == '__main__':
         image_path_list.append(image_path.split('\n')[0])
 
     for label in label_txt:
-        label_list.append(int(label))
+        if args.testdata:
+            label_list.append(label.split('\n')[0])
+        else:
+            label_list.append(int(label))
 
     data_N = len(image_path_list)
 
@@ -51,18 +55,22 @@ if __name__ == '__main__':
         height = img.shape[0]
         width = img.shape[1]
 
-        if label == 1:
-            msg = "POSITIVE"
-            color = (221,178,68)
+        if args.testdata:
+            msg = label
+            color = (0,255,0)
         else:
-            msg = "NEGATIVE"
-            color = (250,53,225)
+            if label == 1:
+                msg = "POSITIVE"
+                color = (221,178,68)
+            else:
+                msg = "NEGATIVE"
+                color = (250,53,225)
 
         print msg
-        cv2.putText(img, msg, (5, height-20), fontType, 0.8, color, 2)
+        cv2.putText(img, "label: "+msg, (5, height-20), fontType, 0.8, color, 2)
         cv2.imshow("image", img)
 
-        key = cv2.waitKey(1000) & 0xFF
+        key = cv2.waitKey(2000) & 0xFF
 
         if key & 0xFF == 27:
             break
