@@ -229,14 +229,12 @@ if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
     ret, img = cap.read()
 
-    net = load_net("../cfg/yolov3.cfg", "../yolov3.weights", 0)
-    meta = load_meta("../cfg/coco.data")
+    net_filename = "../cfg/yolov3.cfg"
+    weights_filename = "../yolov3.weights"
+    meta_filename = "../cfg/coco.data"
 
-    # net = load_net("../cfg/yolov3.cfg", "../yolov3.weights", 0)
-    # meta = load_meta("../cfg/coco.data")
-
-    # net = load_net("../cfg/yolov2.cfg", "../yolov2.weights", 0)
-    # meta = load_meta("../cfg/coco.data")
+    net = load_net(net_filename.encode('utf-8'), weights_filename.encode('utf-8'), 0)
+    meta = load_meta(meta_filename.encode('utf-8'))
 
     color = (0,255,0)
 
