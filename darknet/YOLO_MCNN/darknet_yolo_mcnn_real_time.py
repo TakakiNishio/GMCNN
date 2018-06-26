@@ -268,12 +268,12 @@ if __name__ == "__main__":
     ret, img = cap.read()
 
     # Load YOLO
-    net = load_net("../cfg/yolov3.cfg", "../yolov3.weights", 0)
-    meta = load_meta("../cfg/coco.data")
+    net_filename = "../cfg/yolov3.cfg"
+    weights_filename = "../yolov3.weights"
+    meta_filename = "../cfg/coco.data"
 
-    # net = load_net("../cfg/yolov2.cfg", "../yolov2.weights", 0)
-    # meta = load_meta("../cfg/coco.data")
-
+    net = load_net(net_filename.encode('utf-8'), weights_filename.encode('utf-8'), 0)
+    meta = load_meta(meta_filename.encode('utf-8'))
     
     # Load module type CNN model and weights
     # model_path = 'carrot_model1/'
@@ -319,7 +319,7 @@ if __name__ == "__main__":
         copied_img = copy.deepcopy(img)
 
         if img is None:
-            print "No image !!"
+            print("No image !!")
             break
 
         r = detect_np(net, meta, img)
@@ -349,7 +349,7 @@ if __name__ == "__main__":
                                     rec_points[2]:rec_points[3]] # ymin:ymax, xmin:xmax
 
                     target_class, prob = mcnn(target_img)
-                    print prob
+                    print(prob)
                     
 
                 else:
@@ -379,19 +379,20 @@ if __name__ == "__main__":
                         background_img[x1:x2,y1:y2] = target_img
 
                         target_img = copy.deepcopy(background_img)
-                        print "sup"
+                        print("sup")
 
                         # cv2.imshow("aaa", background_img)
 
                         # target_class, prob = mcnn(target_img)
                         target_class, prob = mcnn(background_img)
 
-                        print target_class
+                        print(target_class)
 
-                        print prob
+                        print(prob)
                     else:
                         target_class, prob = mcnn(target_img)
-                        print prob
+                        print(prob)
+
                     
                 if target_class == 0:
                     color = (0,0,255)
