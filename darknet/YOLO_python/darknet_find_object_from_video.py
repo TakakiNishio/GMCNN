@@ -265,9 +265,6 @@ if __name__ == "__main__":
     net = load_net("../cfg/yolov3.cfg", "../yolov3.weights", 0)
     meta = load_meta("../cfg/coco.data")
 
-    # net = load_net("../cfg/yolov3.cfg", "../yolov3.weights", 0)
-    # meta = load_meta("../cfg/coco.data")
-
     # net = load_net("../cfg/yolov2.cfg", "../yolov2.weights", 0)
     # meta = load_meta("../cfg/coco.data")
 
@@ -287,6 +284,11 @@ if __name__ == "__main__":
             break
 
         r = detect_np(net, meta, img)
+        for i in r:
+            if i[0].decode() == "person":
+                print "person detected."
+                continue
+        
         for i in r:
             x, y, w, h = i[2][0], i[2][1], i[2][2], i[2][3]
             xmin, ymin, xmax, ymax = convertBack(float(x), float(y), float(w), float(h))
